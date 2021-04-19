@@ -1,5 +1,4 @@
 use bevy::{
-    diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
     input::mouse::MouseMotion,
     render::pass::ClearColor,
     sprite::collide_aabb::{collide, Collision},
@@ -40,12 +39,10 @@ fn main() {
         .add_system(brick_collision.system().after("movement"))
         .add_system(exit_on_esc_system.system())
         .add_plugins(DefaultPlugins)
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .run();
 }
 
 struct MyMaterials {
-    // bricks: TextureAtlas, //Vec<Handle<ColorMaterial>>,
     paddle: Handle<ColorMaterial>,
     wall: Handle<ColorMaterial>,
     ball: Handle<ColorMaterial>,
@@ -53,20 +50,7 @@ struct MyMaterials {
 
 impl MyMaterials {
     fn init(asset_server: Res<AssetServer>, mut materials: ResMut<Assets<ColorMaterial>>) -> Self {
-        // let brick_texture_files = [
-        //     "images/brickwall.png",
-        //     "images/brickwall2.png",
-        //     "images/cinder-block.png",
-        // ];
-
         MyMaterials {
-            // bricks: brick_texture_files
-            //     .iter()
-            //     .map(|&texture_file| {
-            //         let handle = asset_server.load(texture_file);
-            //         materials.add(handle.into())
-            //     })
-            //     .collect(),
             paddle: materials.add(asset_server.load("images/wood-texture.png").into()),
             wall: materials.add(Color::GRAY.into()),
             ball: materials.add(asset_server.load("images/silver-ball.png").into()),
@@ -165,8 +149,6 @@ fn setup(
     }
 
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-
-    // commands.insert_resource(SpawnTimer(Timer::from_seconds(1.0, true)));
 }
 
 fn setup_walls(commands: &mut Commands, materials: &Res<MyMaterials>) {
@@ -218,7 +200,7 @@ fn paddle_movement(
         transform.translation.x += delta;
 
         let limit = (PLAYAREA_WIDTH / 2.0) - (PADDLE_WIDTH / 2.0);
-        transform.translation.x = transform.translation.x.clamp(-limit, limit); //  .min(limit).max(-limit);
+        transform.translation.x = transform.translation.x.clamp(-limit, limit);
     }
 }
 
@@ -317,13 +299,8 @@ fn brick_collision(
     mut ball_query: Query<(&mut Ball, &Transform, &Sprite)>,
     mut brick_query: Query<(Entity, &mut Brick, &Transform, &mut TextureAtlasSprite)>,
     mut commands: Commands,
-    diag: Res<Diagnostics>,
 ) {
     if let Ok((mut ball, ball_transform, ball_sprite)) = ball_query.single_mut() {
-        // println!(
-        //     "{:?}",
-        //     diag.get_measurement(FrameTimeDiagnosticsPlugin::FPS)
-        // );
         let brick_size = Vec2::new(BRICK_WIDTH, BRICK_HEIGHT);
         for (entity, mut brick, transform, mut sprite) in brick_query.iter_mut() {
             let ball_size = ball_sprite.size;
