@@ -38,10 +38,17 @@ impl Plugin for GamePlugin {
                 .with_system(brick_collision.system()),
         );
 
-        app.add_system_set(SystemSet::on_update(GameState::Game).with_system(start_ball.system()));
+        app.add_system_set(
+            SystemSet::on_update(GameState::Game)
+                .with_system(start_ball.system())
+                .with_system(handle_keyboard.system()),
+        );
+
+        app.add_system_set(SystemSet::on_exit(GameState::Game).with_system(cleanup.system()));
     }
 }
 
+struct Disposable;
 struct Paddle;
 struct Wall;
 struct Brick {
@@ -79,7 +86,8 @@ fn setup_board(
             transform: Transform::from_translation(Vec3::new(0., base_line, 1.)),
             ..Default::default()
         })
-        .insert(Paddle);
+        .insert(Paddle)
+        .insert(Disposable);
 
     // ball
     let starting_height = base_line + (PADDLE_HEIGHT / 2.0) + 7.0;
@@ -90,6 +98,7 @@ fn setup_board(
             transform: Transform::from_translation(Vec3::new(0.0, starting_height, 1.0)),
             ..Default::default()
         })
+        .insert(Disposable)
         .insert(Ball {
             velocity: Vec3::default(),
             speed: 0.0,
@@ -123,7 +132,8 @@ fn setup_board(
                     },
                     ..Default::default()
                 })
-                .insert(Brick { life: brick_life });
+                .insert(Brick { life: brick_life })
+                .insert(Disposable);
         }
     }
 
@@ -168,6 +178,31 @@ fn setup_walls(commands: &mut Commands, materials: &Res<MaterialsAssets>) {
             ..Default::default()
         })
         .insert(Wall);
+}
+
+fn handle_keyboard(
+    mut keyboard_input: ResMut<Input<KeyCode>>,
+    mut state: ResMut<State<GameState>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Escape) {
+        keyboard_input.reset(KeyCode::Escape);
+        state.set(GameState::Menu).expect("state: game -> menu");
+    }
+}
+
+fn cleanup(
+    mut commands: Commands,
+    mut windows: ResMut<Windows>,
+    entities: Query<(Entity, &Disposable)>,
+) {
+    if let Some(window) = windows.get_primary_mut() {
+        window.set_cursor_lock_mode(false);
+        window.set_cursor_visibility(true);
+    }
+
+    for (entity, _disposable) in entities.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
 }
 
 fn paddle_movement(

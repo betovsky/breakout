@@ -5,8 +5,8 @@ mod game;
 mod loading;
 mod menu;
 
+use bevy::prelude::*;
 use bevy::render::pass::ClearColor;
-use bevy::{input::system::exit_on_esc_system, prelude::*};
 use game::{GamePlugin, PLAYAREA_HEIGHT, PLAYAREA_WIDTH, WALL_THICKNESS};
 use loading::LoadingPlugin;
 use menu::MenuPlugin;
@@ -31,7 +31,6 @@ fn main() {
             vsync: false,
             ..Default::default()
         })
-        .add_system(exit_on_esc_system.system())
         .add_plugins(DefaultPlugins)
         .add_plugin(LoadingPlugin)
         .add_plugin(MenuPlugin)

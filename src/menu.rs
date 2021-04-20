@@ -8,7 +8,9 @@ impl Plugin for MenuPlugin {
         app.init_resource::<ButtonMaterials>()
             .add_system_set(SystemSet::on_enter(GameState::Menu).with_system(setup_menu.system()))
             .add_system_set(
-                SystemSet::on_update(GameState::Menu).with_system(click_play_button.system()),
+                SystemSet::on_update(GameState::Menu)
+                    .with_system(button_interaction.system())
+                    .with_system(handle_keyboard.system()),
             )
             .add_system_set(SystemSet::on_exit(GameState::Menu).with_system(cleanup.system()));
     }
@@ -129,7 +131,13 @@ type ButtonInteraction<'a> = (
     &'a MenuButton,
 );
 
-fn click_play_button(
+fn handle_keyboard(keyboard_input: Res<Input<KeyCode>>, mut app_exit_events: EventWriter<AppExit>) {
+    if keyboard_input.just_pressed(KeyCode::Escape) {
+        app_exit_events.send(AppExit);
+    }
+}
+
+fn button_interaction(
     button_materials: Res<ButtonMaterials>,
     mut state: ResMut<State<GameState>>,
     mut interaction_query: Query<ButtonInteraction, (Changed<Interaction>, With<MenuButton>)>,
