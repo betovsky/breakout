@@ -93,7 +93,7 @@ fn check_state(
         )),
     });
 
-    state.set(GameState::Game).expect("state: menu");
+    state.set(GameState::Menu).expect("state: loading -> menu");
     println!("finish loading");
 }
 

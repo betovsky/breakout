@@ -17,31 +17,28 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_system_set(SystemSet::on_enter(GameState::Game).with_system(setup.system()))
-            .add_system_set(
-                SystemSet::on_update(GameState::Game)
-                    .with_system(paddle_movement.system().label("movement")),
-            )
-            .add_system_set(
-                SystemSet::on_update(GameState::Game)
-                    .with_system(start_ball.system().label("movement")),
-            )
-            .add_system_set(
-                SystemSet::on_update(GameState::Game)
-                    .with_system(ball_movement.system().label("movement")),
-            )
-            .add_system_set(
-                SystemSet::on_update(GameState::Game)
-                    .with_system(ball_wall_collision.system().after("movement")),
-            )
-            .add_system_set(
-                SystemSet::on_update(GameState::Game)
-                    .with_system(ball_paddle_collision.system().after("movement")),
-            )
-            .add_system_set(
-                SystemSet::on_update(GameState::Game)
-                    .with_system(brick_collision.system().after("movement")),
-            );
+        app.add_system_set(
+            SystemSet::on_enter(GameState::Game)
+                .with_system(setup_board.system())
+                .with_system(hide_mouse.system()),
+        );
+
+        app.add_system_set(
+            SystemSet::on_update(GameState::Game)
+                .label("movement")
+                .with_system(paddle_movement.system())
+                .with_system(ball_movement.system()),
+        );
+
+        app.add_system_set(
+            SystemSet::on_update(GameState::Game)
+                .after("movement")
+                .with_system(ball_wall_collision.system())
+                .with_system(ball_paddle_collision.system())
+                .with_system(brick_collision.system()),
+        );
+
+        app.add_system_set(SystemSet::on_update(GameState::Game).with_system(start_ball.system()));
     }
 }
 
@@ -56,7 +53,19 @@ struct Ball {
     speed: f32,
 }
 
-fn setup(mut commands: Commands, materials: Res<MaterialsAssets>, brick_assets: Res<BrickAssets>) {
+fn hide_mouse(mut windows: ResMut<Windows>, mut mouse_button_input: ResMut<Input<MouseButton>>) {
+    mouse_button_input.reset(MouseButton::Left);
+    if let Some(window) = windows.get_primary_mut() {
+        window.set_cursor_lock_mode(true);
+        window.set_cursor_visibility(false);
+    }
+}
+
+fn setup_board(
+    mut commands: Commands,
+    materials: Res<MaterialsAssets>,
+    brick_assets: Res<BrickAssets>,
+) {
     println!("setup game");
     // walls
     setup_walls(&mut commands, &materials);
@@ -180,7 +189,7 @@ fn start_ball(
     paddle_query: Query<(&Paddle, &Transform)>,
 ) {
     if let Ok(mut ball) = ball_query.single_mut() {
-        if mouse_button_input.pressed(MouseButton::Left) && ball.velocity == Vec3::default() {
+        if mouse_button_input.just_pressed(MouseButton::Left) && ball.velocity == Vec3::default() {
             let paddle_x = paddle_query
                 .single()
                 .map_or(0.0, |(_paddle, transform)| transform.translation.x);
