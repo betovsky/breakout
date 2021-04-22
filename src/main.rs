@@ -7,7 +7,7 @@ mod menu;
 
 use bevy::prelude::*;
 use bevy::render::pass::ClearColor;
-use game::{GamePlugin, PLAYAREA_HEIGHT, PLAYAREA_WIDTH, WALL_THICKNESS};
+use game::{config::CONFIG, GamePlugin};
 use loading::LoadingPlugin;
 use menu::MenuPlugin;
 
@@ -25,16 +25,21 @@ fn main() {
         .insert_resource(ClearColor(Color::BLACK))
         .insert_resource(WindowDescriptor {
             title: "Breakout".to_string(),
-            width: PLAYAREA_WIDTH + 2.0 * WALL_THICKNESS,
-            height: PLAYAREA_HEIGHT + 2.0 * WALL_THICKNESS,
+            width: CONFIG.play_area.width + 2.0 * CONFIG.wall_thickness,
+            height: CONFIG.play_area.height + 2.0 * CONFIG.wall_thickness,
             resizable: false,
             vsync: false,
             ..Default::default()
         })
+        .add_startup_system(load_camera2d.system())
         .add_plugins(DefaultPlugins)
         .add_plugin(LoadingPlugin)
         .add_plugin(MenuPlugin)
         .add_plugin(GamePlugin)
         .add_state(GameState::Loading)
         .run();
+}
+
+fn load_camera2d(mut commands: Commands) {
+    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 }
