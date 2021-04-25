@@ -39,8 +39,17 @@ fn setup_board(mut commands: Commands, materials: Res<MaterialsAssets>) {
         });
 }
 
-fn ball_movement(timer: Res<Time>, mut ball_query: Query<(&Ball, &mut Transform)>) {
-    if let Ok((ball, mut transform)) = ball_query.single_mut() {
+fn ball_movement(
+    timer: Res<Time>,
+    mut commands: Commands,
+    mut balls_query: Query<(Entity, &Ball, &mut Transform)>,
+) {
+    let limit = -CONFIG.play_area.height / 2.0;
+    for (entity, ball, mut transform) in balls_query.iter_mut() {
         transform.translation += ball.velocity * timer.delta_seconds();
+        if transform.translation.y < limit {
+            println!("Despawn ball");
+            commands.entity(entity).despawn();
+        }
     }
 }

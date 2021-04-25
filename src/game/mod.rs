@@ -3,13 +3,14 @@ use balls::Ball;
 use bevy::prelude::*;
 
 use self::{
-    balls::BallPlugin, bricks::BrickPlugin, paddle::PaddlePlugin, pause::PausePlugin,
-    walls::WallPlugin,
+    balls::BallPlugin, bricks::BrickPlugin, gameover::GameOverPlugin, paddle::PaddlePlugin,
+    pause::PausePlugin, walls::WallPlugin,
 };
 
 mod balls;
 mod bricks;
 pub mod config;
+mod gameover;
 mod paddle;
 mod pause;
 pub mod walls;
@@ -31,6 +32,7 @@ impl Plugin for GamePlugin {
         app.add_plugin(BallPlugin);
         app.add_plugin(PaddlePlugin);
         app.add_plugin(PausePlugin);
+        app.add_plugin(GameOverPlugin);
     }
 }
 
@@ -47,7 +49,7 @@ fn handle_keyboard_esc(
     mut state: ResMut<State<GameState>>,
 ) {
     match state.current() {
-        GameState::Game | GameState::Pause => {
+        GameState::Game | GameState::GameOver | GameState::Pause => {
             if keyboard_input.just_pressed(KeyCode::Escape) {
                 keyboard_input.reset(KeyCode::Escape);
                 state.replace(GameState::Menu).expect("state: game -> menu");

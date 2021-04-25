@@ -15,6 +15,7 @@ use menu::MenuPlugin;
 enum GameState {
     Loading,
     Game,
+    GameOver,
     Pause,
     Menu,
 }
