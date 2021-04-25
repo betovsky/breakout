@@ -1,5 +1,8 @@
 use super::{config::CONFIG, Ball, Disposable};
-use crate::{loading::BrickAssets, GameState};
+use crate::{
+    loading::{BrickAssets, MaterialsAssets},
+    GameState,
+};
 use bevy::{
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
@@ -71,8 +74,9 @@ fn brick_collision(
     mut ball_query: Query<(&mut Ball, &Transform, &Sprite)>,
     mut brick_query: Query<(Entity, &mut Brick, &Transform, &mut TextureAtlasSprite)>,
     mut commands: Commands,
+    materials: Res<MaterialsAssets>,
 ) {
-    if let Ok((mut ball, ball_transform, ball_sprite)) = ball_query.single_mut() {
+    for (mut ball, ball_transform, ball_sprite) in ball_query.iter_mut() {
         let brick_size = Vec2::new(CONFIG.brick_size.width, CONFIG.brick_size.height);
         for (entity, mut brick, transform, mut sprite) in brick_query.iter_mut() {
             let ball_size = ball_sprite.size;
@@ -94,6 +98,12 @@ fn brick_collision(
                     brick.life -= 1;
                     sprite.index = brick.life;
                 } else {
+                    Ball::spawn(
+                        &mut commands,
+                        &materials,
+                        ball_position.into(),
+                        Ball::with_default_speed(Vec3::new(0.0, -1.0, 0.0)),
+                    );
                     commands.entity(entity).despawn();
                 }
             }

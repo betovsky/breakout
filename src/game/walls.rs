@@ -78,7 +78,7 @@ fn ball_wall_collision(
     mut ball_query: Query<(&mut Ball, &Transform, &Sprite)>,
     wall_query: Query<(&Wall, &Transform, &Sprite)>,
 ) {
-    if let Ok((mut ball, ball_transform, ball_sprite)) = ball_query.single_mut() {
+    for (mut ball, ball_transform, ball_sprite) in ball_query.iter_mut() {
         let ball_size = ball_sprite.size;
         let ball_position = ball_transform.translation;
 

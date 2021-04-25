@@ -2,9 +2,45 @@ use super::{config::CONFIG, Disposable};
 use crate::{loading::MaterialsAssets, GameState};
 use bevy::{math::Vec3, prelude::*};
 
+#[derive(Default)]
 pub struct Ball {
     pub velocity: Vec3,
     pub speed: f32,
+}
+
+impl Ball {
+    pub fn with_default_speed(direction: Vec3) -> Self {
+        Ball {
+            velocity: direction.normalize() * CONFIG.ball_starting_speed,
+            speed: CONFIG.ball_starting_speed,
+        }
+    }
+
+    pub fn new(velocity: Vec3) -> Self {
+        Ball {
+            velocity: velocity,
+            speed: velocity.length(),
+        }
+    }
+}
+
+impl Ball {
+    pub fn spawn(
+        commands: &mut Commands,
+        materials: &Res<MaterialsAssets>,
+        position: Vec2,
+        ball: Ball,
+    ) {
+        commands
+            .spawn_bundle(SpriteBundle {
+                material: materials.ball.clone(),
+                sprite: Sprite::new(Vec2::new(14., 14.)),
+                transform: Transform::from_translation((position, 1.0).into()), // put on position with z: 1.0
+                ..Default::default()
+            })
+            .insert(Disposable)
+            .insert(ball);
+    }
 }
 
 pub struct BallPlugin;
@@ -25,18 +61,12 @@ fn setup_board(mut commands: Commands, materials: Res<MaterialsAssets>) {
     // ball
     let base_line = -(CONFIG.play_area.height / 2.0) + 50.0;
     let starting_height = base_line + (CONFIG.paddle_starting_size.height / 2.0) + 7.0;
-    commands
-        .spawn_bundle(SpriteBundle {
-            material: materials.ball.clone(),
-            sprite: Sprite::new(Vec2::new(14., 14.)),
-            transform: Transform::from_translation(Vec3::new(0.0, starting_height, 1.0)),
-            ..Default::default()
-        })
-        .insert(Disposable)
-        .insert(Ball {
-            velocity: Vec3::default(),
-            speed: 0.0,
-        });
+    Ball::spawn(
+        &mut commands,
+        &materials,
+        Vec2::new(0.0, starting_height),
+        Ball::default(),
+    );
 }
 
 fn ball_movement(

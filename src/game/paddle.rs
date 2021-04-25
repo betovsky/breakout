@@ -64,8 +64,8 @@ fn ball_paddle_collision(
     mut ball_query: Query<(&mut Ball, &Transform, &Sprite)>,
     paddle_query: Query<(&Paddle, &Transform, &Sprite)>,
 ) {
-    if let Ok((mut ball, ball_transform, ball_sprite)) = ball_query.single_mut() {
-        if let Ok((_paddle, paddle_transform, paddle_sprite)) = paddle_query.single() {
+    if let Ok((_paddle, paddle_transform, paddle_sprite)) = paddle_query.single() {
+        for (mut ball, ball_transform, ball_sprite) in ball_query.iter_mut() {
             let ball_size = ball_sprite.size;
             let ball_position = ball_transform.translation;
 
@@ -76,9 +76,6 @@ fn ball_paddle_collision(
 
             if let Some(collision) = collision {
                 match collision {
-                    Collision::Left => ball.velocity.x *= -1.0,
-                    Collision::Right => ball.velocity.x *= -1.0,
-                    Collision::Bottom => unreachable!(), // maybe put some end case scenario??
                     Collision::Top => {
                         // adjust velocity on x-axis depending of where it hit on the paddle
                         let mut velocity = ball.velocity;
@@ -90,6 +87,7 @@ fn ball_paddle_collision(
                         println!("Speed: {:?}", ball.speed);
                         ball.velocity = ball.speed * velocity.normalize();
                     }
+                    _ => ball.velocity.x *= -1.0,
                 }
             }
         }
