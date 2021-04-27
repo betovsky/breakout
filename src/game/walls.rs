@@ -1,5 +1,8 @@
 use super::{config::CONFIG, Ball};
-use crate::{loading::MaterialsAssets, GameState};
+use crate::{
+    loading::{MaterialsAssets, SoundAssets},
+    GameState,
+};
 use bevy::{
     prelude::*,
     sprite::{
@@ -7,6 +10,7 @@ use bevy::{
         Sprite,
     },
 };
+use bevy_kira_audio::Audio;
 
 struct Wall;
 pub struct WallPlugin;
@@ -77,6 +81,8 @@ fn setup_walls(mut commands: Commands, materials: Res<MaterialsAssets>) {
 fn ball_wall_collision(
     mut ball_query: Query<(&mut Ball, &Transform, &Sprite)>,
     wall_query: Query<(&Wall, &Transform, &Sprite)>,
+    audio: Res<Audio>,
+    sounds: Res<SoundAssets>,
 ) {
     for (mut ball, ball_transform, ball_sprite) in ball_query.iter_mut() {
         let ball_size = ball_sprite.size;
@@ -86,6 +92,7 @@ fn ball_wall_collision(
             let collision = collide(ball_position, ball_size, transform.translation, sprite.size);
 
             if let Some(collision) = collision {
+                audio.play(sounds.hit.clone());
                 match collision {
                     Collision::Left | Collision::Right => {
                         ball.velocity.x = ball.velocity.x.copysign(-ball_position.x)

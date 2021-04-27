@@ -1,6 +1,7 @@
-use crate::GameState;
+use crate::{loading::SoundAssets, GameState};
 use balls::Ball;
 use bevy::prelude::*;
+use bevy_kira_audio::{Audio, AudioChannel};
 
 use self::{
     balls::BallPlugin, bricks::BrickPlugin, gameover::GameOverPlugin, paddle::PaddlePlugin,
@@ -25,7 +26,9 @@ impl Plugin for GamePlugin {
 
         app.add_system(handle_keyboard_esc.system());
 
-        app.add_system_set(SystemSet::on_exit(GameState::Game).with_system(cleanup.system()));
+        app.add_system_set(
+            SystemSet::on_exit(GameState::Game).with_system(cleanup.system()), // .with_system(stop_music.system()),
+        );
 
         app.add_plugin(WallPlugin);
         app.add_plugin(BrickPlugin);

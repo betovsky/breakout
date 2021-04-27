@@ -1,12 +1,13 @@
 use super::{config::CONFIG, Ball, Disposable};
 use crate::{
-    loading::{BrickAssets, MaterialsAssets},
+    loading::{BrickAssets, MaterialsAssets, SoundAssets},
     GameState,
 };
 use bevy::{
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
 };
+use bevy_kira_audio::{Audio, AudioChannel};
 use rand::{distributions::Uniform, prelude::Distribution};
 
 struct Brick {
@@ -15,8 +16,16 @@ struct Brick {
 
 pub struct BrickPlugin;
 
+struct AudioChannels {
+    brick_channel: AudioChannel,
+}
+
 impl Plugin for BrickPlugin {
     fn build(&self, app: &mut AppBuilder) {
+        app.insert_resource(AudioChannels {
+            brick_channel: AudioChannel::new("brick".to_owned()),
+        });
+
         app.add_system_set(SystemSet::on_enter(GameState::Game).with_system(setup_board.system()));
 
         app.add_system_set(
@@ -75,6 +84,9 @@ fn brick_collision(
     mut brick_query: Query<(Entity, &mut Brick, &Transform, &mut TextureAtlasSprite)>,
     mut commands: Commands,
     materials: Res<MaterialsAssets>,
+    sounds: Res<SoundAssets>,
+    audio: Res<Audio>,
+    channels: Res<AudioChannels>,
 ) {
     for (mut ball, ball_transform, ball_sprite) in ball_query.iter_mut() {
         let brick_size = Vec2::new(CONFIG.brick_size.width, CONFIG.brick_size.height);
@@ -95,9 +107,11 @@ fn brick_collision(
                 };
 
                 if brick.life > 0 {
+                    audio.play_in_channel(sounds.hit.clone(), &channels.brick_channel);
                     brick.life -= 1;
                     sprite.index = brick.life;
                 } else {
+                    audio.play_in_channel(sounds.explosion.clone(), &channels.brick_channel);
                     Ball::spawn(
                         &mut commands,
                         &materials,

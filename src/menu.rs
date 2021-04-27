@@ -44,8 +44,6 @@ fn setup_menu(
     windows: Res<Windows>,
     button_materials: Res<ButtonMaterials>,
 ) {
-    commands.spawn_bundle(UiCameraBundle::default());
-
     let button_size = Size::new(Val::Px(160.0), Val::Px(50.0));
     let (top, left) = if let Some(window) = windows.get_primary() {
         (window.height() / 2.0, window.width() / 2.0 - 80.0)

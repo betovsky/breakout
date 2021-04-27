@@ -7,8 +7,9 @@ mod menu;
 
 use bevy::prelude::*;
 use bevy::render::pass::ClearColor;
+use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin};
 use game::{config::CONFIG, GamePlugin};
-use loading::LoadingPlugin;
+use loading::{LoadingPlugin, SoundAssets};
 use menu::MenuPlugin;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
@@ -32,15 +33,30 @@ fn main() {
             vsync: false,
             ..Default::default()
         })
-        .add_startup_system(load_camera2d.system())
+        .add_startup_system(load_cameras.system())
         .add_plugins(DefaultPlugins)
+        .add_plugin(AudioPlugin)
         .add_plugin(LoadingPlugin)
         .add_plugin(MenuPlugin)
         .add_plugin(GamePlugin)
         .add_state(GameState::Loading)
+        .insert_resource(MusicChannel {
+            music: AudioChannel::new("music".to_owned()),
+        })
+        .add_system_set(SystemSet::on_exit(GameState::Loading).with_system(play_music.system()))
         .run();
 }
 
-fn load_camera2d(mut commands: Commands) {
+fn load_cameras(mut commands: Commands) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.spawn_bundle(UiCameraBundle::default());
+}
+
+struct MusicChannel {
+    music: AudioChannel,
+}
+
+fn play_music(sounds: Res<SoundAssets>, audio: Res<Audio>, channels: Res<MusicChannel>) {
+    audio.set_volume_in_channel(0.7, &channels.music);
+    audio.play_looped_in_channel(sounds.music.clone(), &channels.music);
 }

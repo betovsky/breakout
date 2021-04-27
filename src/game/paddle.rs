@@ -1,11 +1,15 @@
 use super::{config::CONFIG, Ball, Disposable};
-use crate::{loading::MaterialsAssets, GameState};
+use crate::{
+    loading::{MaterialsAssets, SoundAssets},
+    GameState,
+};
 use bevy::{
     input::mouse::MouseMotion,
     math::Vec2,
     prelude::*,
     sprite::{collide_aabb::collide, collide_aabb::Collision, Sprite},
 };
+use bevy_kira_audio::Audio;
 
 pub struct PaddlePlugin;
 
@@ -63,6 +67,8 @@ fn paddle_movement(
 fn ball_paddle_collision(
     mut ball_query: Query<(&mut Ball, &Transform, &Sprite)>,
     paddle_query: Query<(&Paddle, &Transform, &Sprite)>,
+    audio: Res<Audio>,
+    sounds: Res<SoundAssets>,
 ) {
     if let Ok((_paddle, paddle_transform, paddle_sprite)) = paddle_query.single() {
         for (mut ball, ball_transform, ball_sprite) in ball_query.iter_mut() {
@@ -75,6 +81,7 @@ fn ball_paddle_collision(
             let collision = collide(ball_position, ball_size, paddle_position, paddle_size);
 
             if let Some(collision) = collision {
+                audio.play(sounds.paddle.clone());
                 match collision {
                     Collision::Top => {
                         // adjust velocity on x-axis depending of where it hit on the paddle
